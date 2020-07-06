@@ -1,0 +1,57 @@
+CREATE WAREHOUSE TRAINING_HP
+WITH
+    WAREHOUSE_SIZE=XSMALL
+    AUTO_SUSPEND=60
+    AUTO_RESUME=TRUE
+    INITIALLY_SUSPENDED=TRUE
+    STATEMENT_QUEUED_TIMEOUT_IN_SECONDS=300
+    STATEMENT_TIMEOUT_IN_SECONDS=600;
+    
+    
+CREATE DATABASE TEST_DB
+DATA_RETENTION_TIME_IN_DAYS=0
+COMMENT = 'Testing_DB';
+
+create schema test_schema;
+create schema test_view;
+create schema test_stage;
+
+
+USE WAREHOUSE TRAINING_HP;
+USE DATABASE TEST_DB;
+USE SCHEMA test_schema;
+
+
+
+create or replace table json_table(json_table variant);
+desc table json_table;
+select count(*) from json_table;
+
+
+copy into json_table from @~/JSON
+file_format='JSON'
+on_error='continue';
+
+
+create or replace file format myjsonformat
+  type = 'JSON'
+  strip_outer_array = true;
+  
+create or replace stage my_json_stage
+ file_format = myjsonformat;
+  
+//---PUT command do not work in Worksheet---
+put file://C:\TEMP\test.json @my_json_stage auto_compress=true;
+
+
+
+list @my_json_stage;
+
+
+copy into json_table
+  from @my_json_stage/test.json.gz
+  file_format = (format_name = myjsonformat)
+  on_error = 'skip_file';
+
+
+s3://sessionlogsxml/Session/logs/test.xml

@@ -1,0 +1,15 @@
+//Loading XML file data
+create or replace file format myxmlformat
+  type = 'XML'
+  strip_outer_element = true;
+  
+   
+create or replace stage my_xml_stage
+  file_format = myxmlformat;
+  
+PUT file://C:\test.xml @my_xml_stage auto_compress=true;
+
+copy into xml_table
+  from @my_json_stage/test.xml.gz
+  file_format = (format_name = myxmlformat)
+  on_error = 'skip_file';

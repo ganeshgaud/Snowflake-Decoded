@@ -1,0 +1,25 @@
+//Loading csv file data
+DROP DATABASE customer;
+
+
+CREATE TABLE CUSTOMER(
+  ID STRING,
+  Name STRING,
+  Address STRING,
+  City STRING,
+  PostCode Number,
+  State STRING,
+  Company STRING,
+  Contact STRING
+);
+
+create or replace stage my_s3_stage url='s3://snowflake-essentials/';
+
+copy into CUSTOMER
+  from s3://snowflake-essentials/our_first_table_data.csv
+  file_format = (type = csv field_delimiter = '|' skip_header = 1)
+  on_error = 'skip_file';
+
+select * from CUSTOMER;
+
+select count(*) from CUSTOMER;
